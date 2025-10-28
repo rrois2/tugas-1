@@ -50,7 +50,32 @@ class Dealer:
                     print(f"Anda akan membeli: {mobil_dipilih.tampilkan_info()}")
                     konfirmasi = input("Lanjutkan transaksi? (y/n): ").lower()
                     if konfirmasi == 'y':
-                        mobil_dipilih.jual()
+                        #mobil_dipilih.jual()
+                        harga_mobil = mobil_dipilih.harga
+                        print("---------------------------")
+                        print(f"Total tagihan : Rp.{harga_mobil:,.0f}")
+
+                        try:
+                            uang_str = input("Masukkan jumlah uang pembayaran anda : Rp ")
+                            uang_pembayaran = int(uang_str.replace(".","").replace(",",""))
+
+                            if uang_pembayaran >=harga_mobil:
+                                kembalian = uang_pembayaran - harga_mobil
+
+                                print(f"\n Pembayaran berhasil")
+                                print(f"Uang anda   : Rp{uang_pembayaran :,.0f}")
+                                print(f"kembalian anda : Rp{kembalian :,.0f}")
+
+                                mobil_dipilih.jual()
+                                print(f"Terima kasih {mobil_dipilih.merk} {mobil_dipilih.model} telah terjual")
+                            else:
+                                kekurangan = harga_mobbil - uang_pembayaran
+                                print(f"\n Transaksi gagal")
+                                print(f"Uang anda kurang sebesar Rp{kekurangan:,.0f}")
+                        
+                        except ValueError:
+                            print("Input pembayaran tidak valid. Harap masukkan angka")
+
                     else:
                         print("Transaksi dibatalkan.")
                 else:
