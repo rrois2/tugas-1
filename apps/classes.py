@@ -1,45 +1,81 @@
+from . import database
+
+
 class Kendaraan:
-    def __init__(self, merk, model, tahun, harga):
+    def __init__(self, id, merk, model, tahun, harga, status="Tersedia"):
+        self.id = id
         self.merk = merk
         self.model = model
         self.tahun = tahun
         self.harga = harga
-        self.status = "Tersedia"
+        self.status = status
 
     def tampilkan_info(self):
         return f"{self.tahun} {self.merk} {self.model} - Rp{self.harga:,.0f} ({self.status})"
 
-    def jual(self):
-        self.status = "Terjual"
-        print(f"✅ Transaksi Berhasil! {self.merk} {self.model} telah terjual.")
+    # def jual(self):
+    #     self.status = "Terjual"
+    #     print(f"✅ Transaksi Berhasil! {self.merk} {self.model} telah terjual.")
 
 
 class Dealer:
     def __init__(self, nama):
         self.nama = nama
-        self.inventaris = []
+        database.create_table()
 
-    def tambah_kendaraan(self, kendaraan):
-        """Menambahkan objek kendaraan ke dalam daftar inventaris."""
-        self.inventaris.append(kendaraan)
+        self.kendaraan_terdisplay = []
+
+    def tambah_kendaraan_interaktif(self):
+        print("\n--- Tambah Kendaraan Baru ---")
+        try:
+            merk = input("Merk Kendaraan : ")
+            model = input("Model Kendaraan : ")
+            tahun = int(input("Tahun : "))
+            harga = float(input("Harga : "))
+           
+            if database.tambah_kendaraan_db(merk, model, tahun, harga):
+               print(f"Berhasil {tahun} {merk} {model} ditambahkan ke database")
+            else:
+               print("Gagal menambahkan kendaraan")
+        except ValueError:
+           print("Input tahun/harga tidak valid. Harap masukan angka")
+        except Exception as e:
+           print(f"Terjadi error : {e}")
+
 
     def tampilkan_kendaraan_tersedia(self):
         print(f"\n--- Daftar Kendaraan di {self.nama} ---")
-        ada_stok = False
-        
-        for i, mobil in enumerate(self.inventaris):
-            if mobil.status == "Tersedia":
-                print(f"{i + 1}. {mobil.tampilkan_info()}")
-                ada_stok = True
 
-        if not ada_stok:
-            print("Saat ini tidak ada kendaraan yang tersedia.")
-        print("----------------------------------------")
+        data_rows = database.get_semua_kendaraan_db()
+
+        tersedia_rows = [row for row in data_rows if row['status'] == 'Tersedia']
+
+        if not tersedia_rows:
+            print("saat ini tidak ada kendaraan yang tersedia")
+            print("--------------------------------")
+            self.kendaraan_terdisplay = []
+            return False
+        
+        self.kendaraan_terdisplay = []
+        for i, row in enumerate(tersedia_rows):
+            mobil = Kendaraan(
+                row['id'], row['merk'], row['model'],
+                row['tahun'], row['harga'], row['status']
+            )
+            self.kendaraan_terdisplay.append(mobil)
+            print(f"{i + 1}.{mobil.tampilkan_info()}")
+
+        print("-----------------------------------")
+        return True
+        
+        
 
     def proses_penjualan(self):
-        nomor_str = input("Masukkan nomor kendaraan yang ingin dibeli: ")
+        if not self.tampilkan_kendaraan_tersedia():
+            return
         
         try:
+            nomor_str = input("Masukkan nomor kendaraan yang ingin dibeli: ")
             nomor_pilihan = int(nomor_str)
             indeks_mobil = nomor_pilihan - 1
 
